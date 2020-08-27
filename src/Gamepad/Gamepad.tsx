@@ -56,15 +56,16 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
     buttonChangeHandler = (buttonName: string, down: boolean) => {
         console.log(buttonName, down);
         if (buttonName === 'Start') {
-            if (down) {
-                this.setState({
-                    commandType: this.COMMAND_TYPE.ARM
-                });
-            } else {
-                this.setState({
-                    commandType: this.COMMAND_TYPE.NAVIGATION
-                });
-            }
+            // if (down) {
+            //     this.setState({
+            //         commandType: this.COMMAND_TYPE.ARM
+            //     });
+            // } else {
+            //     this.setState({
+            //         commandType: this.COMMAND_TYPE.NAVIGATION
+            //     });
+            // }
+            this.arm();
         }
     }
 
@@ -95,6 +96,50 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
         console.log(buttonName, 'up');
     }
 
+    arm = () => {
+// if (this.isGamepadDisabled()) {
+        if (true) {
+            const jBody = {
+                "data": {
+                    "type": "manual-control",
+                    "attributes": {
+                        "xAxis": -this.state.x,
+                        "yAxis": -this.state.y,
+                        "zAxis": this.state.z,
+                        "rAxis": this.state.r,
+                        "commandType": this.COMMAND_TYPE.ARM
+                    },
+                    "relationships": {
+                        "vehicle": {
+                            "data": {
+                                // "id": "6ed26ba8-1901-4bb4-981b-21b2c782b7fc",
+                                "id": "luant-drone",
+                                "type": "vehicles"
+                            }
+                        }
+                    }
+                }
+            };
+
+            const url = this.manualControlUrl;
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/vnd.api+json",
+                    "Access-Control-Allow-Origin": "*",
+                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
+                    , 'Accept': 'application/vnd.api+json'
+                }
+                , body: JSON.stringify(jBody)
+            }).then(res => {
+                // console.log("Request complete! response:", res);
+            }).catch(err => {
+
+            });
+        }
+    }
+
     sendRequest = () => {
         // if (this.isGamepadDisabled()) {
         if (true) {
@@ -106,7 +151,7 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
                         "yAxis": -this.state.y,
                         "zAxis": this.state.z,
                         "rAxis": this.state.r,
-                        "commandType": this.state.commandType
+                        "commandType": this.COMMAND_TYPE.NAVIGATION
                     },
                     "relationships": {
                         "vehicle": {
@@ -197,7 +242,7 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
                             <br/> R: <meter value={this.state.r + 0.5} id="rMeter"></meter>
                         </div>
                         <div style={{float: "left"}}>
-                            <button style={{width: "100px"}}>Arm</button>
+                            <button onClick={this.arm} style={{width: "100px"}}>Arm</button>
                         </div>
                         <div style={{float: "left"}}>
                             <Joystick throttle={28} size={this.joystickSize} baseColor="black"
@@ -208,7 +253,6 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
                             <br/> Y: <meter value={this.state.y + 0.5} id="yMeter"></meter>
                         </div>
                     </div>
-
 
 
                 </div>

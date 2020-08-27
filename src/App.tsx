@@ -16,7 +16,7 @@ class App extends Component {
         return (
             <>
                 <select id="serverSelector" onChange={this.onManualControlUrlChanged}>
-                    <option value="http://192.168.1.64:9090" defaultValue={"https://localhost:9090"}>Localhost</option>
+                    <option value="http://192.168.1.64:9090" defaultValue={"https://192.168.1.64:9090"}>Localhost</option>
                     <option value="http://192.168.1.184:8082">Staging</option>
                 </select>
                 <Gamepad ref={this.gamepadRef}>
