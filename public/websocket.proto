@@ -1,0 +1,22 @@
+syntax = "proto2";
+
+message VehiclePosition {
+  optional string id = 1;
+  optional int32 lat = 2;
+  optional int32 lon = 3;
+  optional int32 alt = 4;
+  optional int32 hdg = 5;
+}
+
+message ManualControl {
+    optional float xAxis = 1;
+    optional float yAxis = 2;
+    optional float zAxis = 3;
+    optional float rAxis = 4;
+
+    enum CommandType {
+        NAVIGATION = 0;
+        ARM = 1;
+    }
+    optional CommandType commandType = 5;
+}

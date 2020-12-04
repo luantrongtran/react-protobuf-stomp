@@ -4,7 +4,7 @@ import ReactGamepad from 'react-gamepad'
 import {Joystick} from "react-joystick-component";
 import {IJoystickUpdateEvent} from "react-joystick-component/build/lib/Joystick";
 
-class Gamepad extends Component<any, { x: number, y: number, z: number, r: number, commandType: string, isConnected: boolean }> {
+class Gamepad extends Component<{disabled: boolean }, { x: number, y: number, z: number, r: number, commandType: string, isConnected: boolean }> {
     intervalHandler: any;
 
     joystickSize: number;
@@ -56,15 +56,6 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
     buttonChangeHandler = (buttonName: string, down: boolean) => {
         console.log(buttonName, down);
         if (buttonName === 'Start') {
-            // if (down) {
-            //     this.setState({
-            //         commandType: this.COMMAND_TYPE.ARM
-            //     });
-            // } else {
-            //     this.setState({
-            //         commandType: this.COMMAND_TYPE.NAVIGATION
-            //     });
-            // }
             this.arm();
         }
     }
@@ -79,11 +70,11 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
             this.setState({z})
         }
         if (axisName === "RightStickX") {
-            const x = value
+            const x = -value
             this.setState({x})
         }
         if (axisName === "RightStickY") {
-            const y = value;
+            const y = -value;
             this.setState({y})
         }
     }
@@ -97,14 +88,14 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
     }
 
     arm = () => {
-// if (this.isGamepadDisabled()) {
-        if (true) {
+        if (!this.isGamepadDisabled()) {
+            // if (true) {
             const jBody = {
                 "data": {
                     "type": "manual-control",
                     "attributes": {
-                        "xAxis": -this.state.x,
-                        "yAxis": -this.state.y,
+                        "xAxis": this.state.x,
+                        "yAxis": this.state.y,
                         "zAxis": this.state.z,
                         "rAxis": this.state.r,
                         "commandType": this.COMMAND_TYPE.ARM
@@ -141,14 +132,14 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
     }
 
     sendRequest = () => {
-        // if (this.isGamepadDisabled()) {
-        if (true) {
+        if (!this.isGamepadDisabled()) {
+            // if (true) {
             const jBody = {
                 "data": {
                     "type": "manual-control",
                     "attributes": {
-                        "xAxis": -this.state.x,
-                        "yAxis": -this.state.y,
+                        "xAxis": this.state.x,
+                        "yAxis": this.state.y,
                         "zAxis": this.state.z,
                         "rAxis": this.state.r,
                         "commandType": this.COMMAND_TYPE.NAVIGATION
@@ -188,8 +179,8 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
         const y = this.normalizeMousePositionToWebJoystickValue((event.x == null) ? 0 : event.x);
         const x = this.normalizeMousePositionToWebJoystickValue((event.y == null) ? 0 : event.y);
         this.setState({
-            x: -x,
-            y: -y
+            x: x,
+            y: y
         });
     }
 
@@ -214,10 +205,11 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
     }
 
     isGamepadDisabled = () => {
-        const disabled = this.props.isDisabled;
+        let disabled = this.props.disabled || !this.state.isConnected;
         if (disabled !== undefined) {
-            return false;
+            disabled = false;
         }
+        console.log(disabled);
         return disabled;
     }
 
@@ -238,8 +230,14 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
                                       key="leftJoystick"
                                       move={this.webLeftJoystickHandler}
                                       stop={this.balanceState}>Left</Joystick>
-                            Z: <meter value={this.state.z + 0.5} id="zMeter"></meter>
-                            <br/> R: <meter value={this.state.r + 0.5} id="rMeter"></meter>
+                            <p>
+                                <label htmlFor="zMeter">T:</label>
+                                <meter value={this.state.z + 0.5} id="zMeter"></meter>
+                            </p>
+                            <p>
+                                <label htmlFor={"rMeter"}>Y:</label>
+                                <meter value={this.state.r + 0.5} id="rMeter"></meter>
+                            </p>
                         </div>
                         <div style={{float: "left"}}>
                             <button onClick={this.arm} style={{width: "100px"}}>Arm</button>
@@ -249,8 +247,14 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
                                       ref={this.rightJoystickRef}
                                       move={this.webRightJoystickHandler} key={"rightJoyStick"}
                                       stop={this.balanceState}>Right</Joystick>
-                            X: <meter value={this.state.x + 0.5} id="xMeter"></meter>
-                            <br/> Y: <meter value={this.state.y + 0.5} id="yMeter"></meter>
+                            <p>
+                                <label htmlFor="xMeter">P:</label>
+                                <meter value={(this.state.x + 0.5)} id="xMeter"></meter>
+                            </p>
+                            <p>
+                                <label htmlFor="yMeter">R:</label>
+                                <meter value={(this.state.y + 0.5)} id="yMeter"></meter>
+                            </p>
                         </div>
                     </div>
 
@@ -261,7 +265,7 @@ class Gamepad extends Component<any, { x: number, y: number, z: number, r: numbe
     }
 
     // Convenient variables + methods
-    manualControlUrl: string = "192.168.1.64:9090/manual-control";
+    manualControlUrl: string = "http://localhost:9090/manual-control";
 
     changeManualControlUrl = (newUrl: string) => {
         this.manualControlUrl = newUrl;
