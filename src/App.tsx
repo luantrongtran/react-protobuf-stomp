@@ -38,39 +38,24 @@ class App extends Component<{}, { connected: boolean }> {
 
             // example code
             this.manualControlProtobuf = root.lookupType('ManualControl');
-            // const manualControl = {
-            //     xAxis: 1,
-            //     yAxis: 1,
-            //     zAxis: 1,
-            //     rAxis: 1
-            // };
-            // let encode = this.manualControlProtobuf.encode(manualControl).finish();
-            // console.log(encode);
-            // const decoded = this.manualControlProtobuf.decode(encode);
-            // console.log(decoded);
-            // const vehiclePos = vehiclePosition.create({
-            //     id: 'luant-drone-whatever',
-            //     lat: 65,
-            //     lon: 64,
-            //     alt: 63,
-            //     hdg: 62,
-            // });
-            // const buffer = vehiclePosition.encode(vehiclePos).finish();
-            // let expectedDecoded = vehiclePosition.decode(buffer);
         });
     }
 
     connect = () => {
         console.log("Connecting to websocket");
         console.log(this.manualControlProtobuf);
-        const jwtToken = '';
+        const jwtToken = 'eyJhbGciOiJFUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICItZTQ2Tm5iTXNRbG03ZjdUc0U2Rl9uSUkzakFOQ0NvN0ttNDJPMGFXdUxFIn0.eyJleHAiOjE2MDczMjY1NTUsImlhdCI6MTYwNzI5MDU1NywiYXV0aF90aW1lIjoxNjA3MjkwNTU1LCJqdGkiOiJlMDNiYWYxMC1hNDZmLTQwYzktYjNkYS01MGVhOTE3M2EwNDYiLCJpc3MiOiJodHRwczovL2FwYWMuY2xvdWRncm91bmRjb250cm9sLmNvbS9hdXRoL3JlYWxtcy9jZ2NzLWRldiIsImF1ZCI6WyJicm9rZXIiLCJjbG91ZGdyb3VuZGNvbnRyb2wtZGV2Il0sInN1YiI6ImRjZmNjYjlhLTk3NTktNGVjYy1hZWQ5LTA5ZGI2YmI0NTk3MyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImNsb3VkZ3JvdW5kY29udHJvbC1zdGciLCJzZXNzaW9uX3N0YXRlIjoiOTljZDBhNTMtN2ExYi00ZTAyLWE0MGItNmNlN2MzZGRlOWMyIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlc291cmNlX2FjY2VzcyI6eyJicm9rZXIiOnsicm9sZXMiOlsicmVhZC10b2tlbiJdfSwiY2xvdWRncm91bmRjb250cm9sLWRldiI6eyJyb2xlcyI6WyJVc2VyIEFkbWluaXN0cmF0aW9uIl19LCJjbG91ZGdyb3VuZGNvbnRyb2wtc3RnIjp7InJvbGVzIjpbIlVzZXIgQWRtaW5pc3RyYXRpb24iXX19LCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIGVtYWlsIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJMdWFuIFRyYW4iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJsdWFuLnRyYW5AYWR2YW5jZWRuYXZpZ2F0aW9uLmNvbSIsImdpdmVuX25hbWUiOiJMdWFuIiwiZmFtaWx5X25hbWUiOiJUcmFuIiwiZW1haWwiOiJsdWFuLnRyYW5AYWR2YW5jZWRuYXZpZ2F0aW9uLmNvbSJ9.ASSbkTp9NQnMYWFh-K1chtdruM2vn-s5YEvNyTSpkYlvgWo4ue7mJ3Q1YKLAEuP6WIezXhujnCThSnqXSu1dJTgJARzOUlhorhC8IouUqNcpr_DIdmI-uYpzKLTc_Y2GkMm_StNpUjs7kKIZicMCuVvAjTCPHYrr2u3SnEMie8m-Y_gA';
         const headers = {
-            "Authorization": jwtToken
+            Authorization: jwtToken,
+            contentType: "application/octet-stream"
         };
 
         var socket = new WebSocket('ws://127.0.0.1:9090/ws-manualcontrol');
         this.stompClient = Stomp.over(socket);
-        this.stompClient.connect({Authorization: jwtToken}, (frame: any) => {
+        this.stompClient.connect({
+            Authorization: jwtToken,
+            "content-type": "application/octet-stream"
+        }, (frame: any) => {
             this.setConnected(true);
             console.log('Connected: ' + frame);
             this.stompClient.subscribe('/topic/greetings', (greeting: any) => {
@@ -90,16 +75,16 @@ class App extends Component<{}, { connected: boolean }> {
     sendManualControl = (manualConrtol: any) => {
         console.log("Sending manual control");
         const manualControl = {
-            xAxis: 1,
-            yAxis: 1,
-            zAxis: 1,
-            rAxis: 1
+            xAxis: 0.6,
+            yAxis: 0.5,
+            zAxis: 0.3,
+            rAxis: 0.8
         };
         let encode = this.manualControlProtobuf.encode(manualControl).finish();
         console.log(encode);
         const decoded = this.manualControlProtobuf.decode(encode);
         console.log(decoded);
-        this.stompClient.send("/app/ws-manualcontrol", {"content-type": "application/x-binary"}, encode);//application/octet-stream
+        this.stompClient.send("/app/ws-manualcontrol", {"content-type": "application/octet-stream", "vehicleId": "luant-drone"}, encode);//application/octet-stream
     }
 
     setConnected = (connected: boolean) => {
