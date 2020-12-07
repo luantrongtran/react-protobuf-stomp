@@ -3,18 +3,26 @@ import React, {Component} from 'react';
 import ReactGamepad from 'react-gamepad'
 import {Joystick} from "react-joystick-component";
 import {IJoystickUpdateEvent} from "react-joystick-component/build/lib/Joystick";
+import {load, Root} from "protobufjs";
 
-class Gamepad extends Component<{disabled: boolean }, { x: number, y: number, z: number, r: number, commandType: string, isConnected: boolean }> {
+const Stomp = require('stompjs');
+
+enum CommandType {
+    NAVIGATION,
+    ARM
+};
+
+class Gamepad extends Component<{ disabled: boolean }, { x: number, y: number, z: number, r: number, commandType: string, isControllerConnected: boolean,
+                                                                isWebSocketConnected: boolean}> {
     intervalHandler: any;
 
     joystickSize: number;
     leftJoystickRef: any;
     rightJoystickRef: any;
 
-    readonly COMMAND_TYPE = {
-        NAVIGATION: "NAVIGATION",
-        ARM: "ARM"
-    };
+    manualControlProtobuf: any;
+
+    stompClient: any;
 
     constructor(props: any) {
         super(props);
@@ -25,14 +33,89 @@ class Gamepad extends Component<{disabled: boolean }, { x: number, y: number, z:
             z: 0,
             r: 0,
             commandType: "NAVIGATION",
-            isConnected: false
+            isControllerConnected: false,
+            isWebSocketConnected: false
         };
 
         this.rightJoystickRef = React.createRef();
         this.leftJoystickRef = React.createRef();
         this.joystickSize = 100;
 
+        load('/websocket.proto', (err: (Error | null), root?: Root) => {
+            console.log('Loading proto file');
+            if (err || root === undefined) {
+                console.error('failed to load proto file');
+                throw err;
+            }
+
+            // example code
+            this.manualControlProtobuf = root.lookupType('ManualControl');
+        });
+
         this.sendRequest();
+    }
+
+    /**
+     * To update the websocket connection
+     * @param isConnected
+     */
+    setConnected = (isConnected: boolean) => {
+        this.setState({isWebSocketConnected: isConnected})
+    }
+
+    connect = () => {
+        if (this.state.isWebSocketConnected == true) {
+            // if already connected
+            return;
+        }
+        console.log("Connecting to websocket");
+        console.log(this.manualControlProtobuf);
+        const jwtToken = 'eyJhbGciOiJFUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICItZTQ2Tm5iTXNRbG03ZjdUc0U2Rl9uSUkzakFOQ0NvN0ttNDJPMGFXdUxFIn0.eyJleHAiOjE2MDczMjY1NTUsImlhdCI6MTYwNzI5MDU1NywiYXV0aF90aW1lIjoxNjA3MjkwNTU1LCJqdGkiOiJlMDNiYWYxMC1hNDZmLTQwYzktYjNkYS01MGVhOTE3M2EwNDYiLCJpc3MiOiJodHRwczovL2FwYWMuY2xvdWRncm91bmRjb250cm9sLmNvbS9hdXRoL3JlYWxtcy9jZ2NzLWRldiIsImF1ZCI6WyJicm9rZXIiLCJjbG91ZGdyb3VuZGNvbnRyb2wtZGV2Il0sInN1YiI6ImRjZmNjYjlhLTk3NTktNGVjYy1hZWQ5LTA5ZGI2YmI0NTk3MyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImNsb3VkZ3JvdW5kY29udHJvbC1zdGciLCJzZXNzaW9uX3N0YXRlIjoiOTljZDBhNTMtN2ExYi00ZTAyLWE0MGItNmNlN2MzZGRlOWMyIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlc291cmNlX2FjY2VzcyI6eyJicm9rZXIiOnsicm9sZXMiOlsicmVhZC10b2tlbiJdfSwiY2xvdWRncm91bmRjb250cm9sLWRldiI6eyJyb2xlcyI6WyJVc2VyIEFkbWluaXN0cmF0aW9uIl19LCJjbG91ZGdyb3VuZGNvbnRyb2wtc3RnIjp7InJvbGVzIjpbIlVzZXIgQWRtaW5pc3RyYXRpb24iXX19LCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIGVtYWlsIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJMdWFuIFRyYW4iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJsdWFuLnRyYW5AYWR2YW5jZWRuYXZpZ2F0aW9uLmNvbSIsImdpdmVuX25hbWUiOiJMdWFuIiwiZmFtaWx5X25hbWUiOiJUcmFuIiwiZW1haWwiOiJsdWFuLnRyYW5AYWR2YW5jZWRuYXZpZ2F0aW9uLmNvbSJ9.ASSbkTp9NQnMYWFh-K1chtdruM2vn-s5YEvNyTSpkYlvgWo4ue7mJ3Q1YKLAEuP6WIezXhujnCThSnqXSu1dJTgJARzOUlhorhC8IouUqNcpr_DIdmI-uYpzKLTc_Y2GkMm_StNpUjs7kKIZicMCuVvAjTCPHYrr2u3SnEMie8m-Y_gA';
+        const headers = {
+            Authorization: jwtToken,
+            contentType: "application/octet-stream"
+        };
+
+        var socket = new WebSocket('ws://127.0.0.1:9090/ws-manualcontrol');
+        this.stompClient = Stomp.over(socket);
+        this.stompClient.connect({
+            Authorization: jwtToken,
+            "content-type": "application/octet-stream"
+        }, (frame: any) => {
+            this.setConnected(true);
+            console.log('Connected: ' + frame);
+        });
+    }
+
+    disconnect = () => {
+        if (this.stompClient !== null) {
+            this.stompClient.disconnect();
+        }
+        this.setConnected(false);
+        console.log("Disconnected");
+    }
+
+    sendManualControl = (manualControl: any) => {
+        if (this.state.isWebSocketConnected === false) {
+            console.log("Cannot manual control - connection closed");
+        }
+        console.log("Sending manual control");
+        // const manualControl = {
+        //     xAxis: 0.6,
+        //     yAxis: 0.5,
+        //     zAxis: 0.3,
+        //     rAxis: 0.8,
+        // };
+        let encode = this.manualControlProtobuf.encode(manualControl).finish();
+        console.log(encode);
+        const decoded = this.manualControlProtobuf.decode(encode);
+        console.log(decoded);
+
+
+        this.stompClient.send("/app/ws-manualcontrol", {
+            "content-type": "application/octet-stream",
+            "vehicleId": "luant-drone"
+        }, encode);//application/octet-stream
     }
 
     componentDidMount() {
@@ -45,12 +128,14 @@ class Gamepad extends Component<{disabled: boolean }, { x: number, y: number, z:
 
     connectHandler = (gamepadIndex: number) => {
         console.log(`Gamepad ${gamepadIndex} connected !`)
-        this.setState({isConnected: true});
+        // this.setState({isConnected: true});
+        this.connect();
     }
 
     disconnectHandler = (gamepadIndex: number) => {
         console.log(`Gamepad ${gamepadIndex} disconnected !`)
-        this.setState({isConnected: false})
+        // this.setState({isConnected: false})
+        this.disconnect();
     }
 
     buttonChangeHandler = (buttonName: string, down: boolean) => {
@@ -88,90 +173,54 @@ class Gamepad extends Component<{disabled: boolean }, { x: number, y: number, z:
     }
 
     arm = () => {
-        if (!this.isGamepadDisabled()) {
+        if (!this.isGamepadDisabled() && this.state.isWebSocketConnected) {
             // if (true) {
-            const jBody = {
-                "data": {
-                    "type": "manual-control",
-                    "attributes": {
-                        "xAxis": this.state.x,
-                        "yAxis": this.state.y,
-                        "zAxis": this.state.z,
-                        "rAxis": this.state.r,
-                        "commandType": this.COMMAND_TYPE.ARM
-                    },
-                    "relationships": {
-                        "vehicle": {
-                            "data": {
-                                // "id": "6ed26ba8-1901-4bb4-981b-21b2c782b7fc",
-                                "id": "luant-drone",
-                                "type": "vehicles"
-                            }
-                        }
-                    }
-                }
-            };
+            const data =
+                {
+                    "xAxis": this.state.x,
+                    "yAxis": this.state.y,
+                    "zAxis": this.state.z,
+                    "rAxis": this.state.r,
+                    "commandType": CommandType.ARM
+                };
 
-            const url = this.manualControlUrl;
-
-            fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/vnd.api+json",
-                    "Access-Control-Allow-Origin": "*",
-                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
-                    , 'Accept': 'application/vnd.api+json'
-                }
-                , body: JSON.stringify(jBody)
-            }).then(res => {
-                // console.log("Request complete! response:", res);
-            }).catch(err => {
-
-            });
+            this.sendManualControl(data);
+            //     const url = this.manualControlUrl;
+            //
+            //     fetch(url, {
+            //         method: "POST",
+            //         headers: {
+            //             "Content-Type": "application/vnd.api+json",
+            //             "Access-Control-Allow-Origin": "*",
+            //             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
+            //             , 'Accept': 'application/vnd.api+json'
+            //         }
+            //         , body: JSON.stringify(jBody)
+            //     }).then(res => {
+            //         // console.log("Request complete! response:", res);
+            //     }).catch(err => {
+            //
+            //     });
         }
     }
 
+    startManualControl = () => {
+        this.connect();
+    }
+
     sendRequest = () => {
-        if (!this.isGamepadDisabled()) {
-            // if (true) {
-            const jBody = {
-                "data": {
-                    "type": "manual-control",
-                    "attributes": {
-                        "xAxis": this.state.x,
-                        "yAxis": this.state.y,
-                        "zAxis": this.state.z,
-                        "rAxis": this.state.r,
-                        "commandType": this.COMMAND_TYPE.NAVIGATION
-                    },
-                    "relationships": {
-                        "vehicle": {
-                            "data": {
-                                // "id": "6ed26ba8-1901-4bb4-981b-21b2c782b7fc",
-                                "id": "luant-drone",
-                                "type": "vehicles"
-                            }
-                        }
-                    }
-                }
+        const shouldSendRequest = !this.isGamepadDisabled() && this.state.isWebSocketConnected === true
+        if (shouldSendRequest) {
+
+            const data = {
+                "xAxis": this.state.x,
+                "yAxis": this.state.y,
+                "zAxis": this.state.z,
+                "rAxis": this.state.r,
+                "commandType": CommandType.NAVIGATION
             };
 
-            const url = this.manualControlUrl;
-
-            fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/vnd.api+json",
-                    "Access-Control-Allow-Origin": "*",
-                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
-                    , 'Accept': 'application/vnd.api+json'
-                }
-                , body: JSON.stringify(jBody)
-            }).then(res => {
-                // console.log("Request complete! response:", res);
-            }).catch(err => {
-
-            });
+            this.sendManualControl(data);
         }
     }
 
@@ -205,11 +254,10 @@ class Gamepad extends Component<{disabled: boolean }, { x: number, y: number, z:
     }
 
     isGamepadDisabled = () => {
-        let disabled = this.props.disabled || !this.state.isConnected;
+        let disabled = this.props.disabled || !this.state.isControllerConnected;
         if (disabled !== undefined) {
             disabled = false;
         }
-        console.log(disabled);
         return disabled;
     }
 
@@ -238,6 +286,9 @@ class Gamepad extends Component<{disabled: boolean }, { x: number, y: number, z:
                                 <label htmlFor={"rMeter"}>Y:</label>
                                 <meter value={this.state.r + 0.5} id="rMeter"></meter>
                             </p>
+                        </div>
+                        <div style={{float: "left"}}>
+                            <button onClick={this.startManualControl} style={{width: "100px"}}>Start manual control</button>
                         </div>
                         <div style={{float: "left"}}>
                             <button onClick={this.arm} style={{width: "100px"}}>Arm</button>

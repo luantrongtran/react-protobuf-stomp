@@ -6,8 +6,8 @@ import Gamepad from "./Gamepad/Gamepad";
 const Stomp = require('stompjs');
 
 enum CommandType  {
-    ARM,
-    NAVIGATION
+    NAVIGATION,
+    ARM
 };
 
 class App extends Component<{}, { connected: boolean }> {
@@ -29,16 +29,16 @@ class App extends Component<{}, { connected: boolean }> {
             connected: false
         };
 
-        load('/websocket.proto', (err: (Error|null), root?: Root) => {
-            console.log('Loading proto file');
-            if (err || root === undefined) {
-                console.error('failed to load proto file');
-                throw err;
-            }
-
-            // example code
-            this.manualControlProtobuf = root.lookupType('ManualControl');
-        });
+        // load('/websocket.proto', (err: (Error|null), root?: Root) => {
+        //     console.log('Loading proto file');
+        //     if (err || root === undefined) {
+        //         console.error('failed to load proto file');
+        //         throw err;
+        //     }
+        //
+        //     // example code
+        //     this.manualControlProtobuf = root.lookupType('ManualControl');
+        // });
     }
 
     connect = () => {
@@ -58,9 +58,9 @@ class App extends Component<{}, { connected: boolean }> {
         }, (frame: any) => {
             this.setConnected(true);
             console.log('Connected: ' + frame);
-            this.stompClient.subscribe('/topic/greetings', (greeting: any) => {
-                this.showGreeting(JSON.parse(greeting.body).content);
-            });
+            // this.stompClient.subscribe('/topic/greetings', (greeting: any) => {
+            //     this.showGreeting(JSON.parse(greeting.body).content);
+            // });
         });
     }
 
@@ -78,12 +78,16 @@ class App extends Component<{}, { connected: boolean }> {
             xAxis: 0.6,
             yAxis: 0.5,
             zAxis: 0.3,
-            rAxis: 0.8
+            rAxis: 0.8,
+            commandType: CommandType.ARM
         };
+        console.log(manualControl);
         let encode = this.manualControlProtobuf.encode(manualControl).finish();
         console.log(encode);
         const decoded = this.manualControlProtobuf.decode(encode);
         console.log(decoded);
+
+
         this.stompClient.send("/app/ws-manualcontrol", {"content-type": "application/octet-stream", "vehicleId": "luant-drone"}, encode);//application/octet-stream
     }
 
@@ -112,11 +116,11 @@ class App extends Component<{}, { connected: boolean }> {
                     </option>
                     <option value="http://192.168.1.184:8082">Staging</option>
                 </select>
-                {/*<p style={{padding: "10 10 10 10"}}>*/}
-                {/*    <Gamepad ref={this.gamepadRef} disabled={false}>*/}
-                {/*        <React.Fragment/>*/}
-                {/*    </Gamepad>*/}
-                {/*</p>*/}
+                <p style={{padding: "10 10 10 10"}}>
+                    <Gamepad ref={this.gamepadRef} disabled={false}>
+                        <React.Fragment/>
+                    </Gamepad>
+                </p>
             </>
         )
     }
