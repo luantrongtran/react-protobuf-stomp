@@ -52,7 +52,7 @@ class Gamepad extends Component<{ disabled: boolean }, { x: number, y: number, z
             this.manualControlProtobuf = root.lookupType('ManualControl');
         });
 
-        this.sendRequest();
+        // this.sendRequest();
     }
 
     /**
@@ -70,13 +70,13 @@ class Gamepad extends Component<{ disabled: boolean }, { x: number, y: number, z
         }
         console.log("Connecting to websocket");
         console.log(this.manualControlProtobuf);
-        const jwtToken = 'eyJhbGciOiJFUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICItZTQ2Tm5iTXNRbG03ZjdUc0U2Rl9uSUkzakFOQ0NvN0ttNDJPMGFXdUxFIn0.eyJleHAiOjE2MDczMjY1NTUsImlhdCI6MTYwNzI5MDU1NywiYXV0aF90aW1lIjoxNjA3MjkwNTU1LCJqdGkiOiJlMDNiYWYxMC1hNDZmLTQwYzktYjNkYS01MGVhOTE3M2EwNDYiLCJpc3MiOiJodHRwczovL2FwYWMuY2xvdWRncm91bmRjb250cm9sLmNvbS9hdXRoL3JlYWxtcy9jZ2NzLWRldiIsImF1ZCI6WyJicm9rZXIiLCJjbG91ZGdyb3VuZGNvbnRyb2wtZGV2Il0sInN1YiI6ImRjZmNjYjlhLTk3NTktNGVjYy1hZWQ5LTA5ZGI2YmI0NTk3MyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImNsb3VkZ3JvdW5kY29udHJvbC1zdGciLCJzZXNzaW9uX3N0YXRlIjoiOTljZDBhNTMtN2ExYi00ZTAyLWE0MGItNmNlN2MzZGRlOWMyIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlc291cmNlX2FjY2VzcyI6eyJicm9rZXIiOnsicm9sZXMiOlsicmVhZC10b2tlbiJdfSwiY2xvdWRncm91bmRjb250cm9sLWRldiI6eyJyb2xlcyI6WyJVc2VyIEFkbWluaXN0cmF0aW9uIl19LCJjbG91ZGdyb3VuZGNvbnRyb2wtc3RnIjp7InJvbGVzIjpbIlVzZXIgQWRtaW5pc3RyYXRpb24iXX19LCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIGVtYWlsIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJMdWFuIFRyYW4iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJsdWFuLnRyYW5AYWR2YW5jZWRuYXZpZ2F0aW9uLmNvbSIsImdpdmVuX25hbWUiOiJMdWFuIiwiZmFtaWx5X25hbWUiOiJUcmFuIiwiZW1haWwiOiJsdWFuLnRyYW5AYWR2YW5jZWRuYXZpZ2F0aW9uLmNvbSJ9.ASSbkTp9NQnMYWFh-K1chtdruM2vn-s5YEvNyTSpkYlvgWo4ue7mJ3Q1YKLAEuP6WIezXhujnCThSnqXSu1dJTgJARzOUlhorhC8IouUqNcpr_DIdmI-uYpzKLTc_Y2GkMm_StNpUjs7kKIZicMCuVvAjTCPHYrr2u3SnEMie8m-Y_gA';
+        const jwtToken = 'eyJhbGciOiJFUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICItZTQ2Tm5iTXNRbG03ZjdUc0U2Rl9uSUkzakFOQ0NvN0ttNDJPMGFXdUxFIn0.eyJleHAiOjE2MDc0Mzc4OTUsImlhdCI6MTYwNzQwMTg5OCwiYXV0aF90aW1lIjoxNjA3NDAxODk1LCJqdGkiOiJmNzU5OWRmMC1hMWVhLTQ0Y2MtOTRmNy1iOTIwODgzZGFhMzIiLCJpc3MiOiJodHRwczovL2FwYWMuY2xvdWRncm91bmRjb250cm9sLmNvbS9hdXRoL3JlYWxtcy9jZ2NzLWRldiIsImF1ZCI6WyJicm9rZXIiLCJjbG91ZGdyb3VuZGNvbnRyb2wtZGV2Il0sInN1YiI6ImRjZmNjYjlhLTk3NTktNGVjYy1hZWQ5LTA5ZGI2YmI0NTk3MyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImNsb3VkZ3JvdW5kY29udHJvbC1zdGciLCJzZXNzaW9uX3N0YXRlIjoiNjE0ODM2NjgtZDE2Yi00NDgyLTljNzEtZWFmNDIwMzVjMzhkIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlc291cmNlX2FjY2VzcyI6eyJicm9rZXIiOnsicm9sZXMiOlsicmVhZC10b2tlbiJdfSwiY2xvdWRncm91bmRjb250cm9sLWRldiI6eyJyb2xlcyI6WyJVc2VyIEFkbWluaXN0cmF0aW9uIl19LCJjbG91ZGdyb3VuZGNvbnRyb2wtc3RnIjp7InJvbGVzIjpbIlVzZXIgQWRtaW5pc3RyYXRpb24iXX19LCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIGVtYWlsIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJMdWFuIFRyYW4iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJsdWFuLnRyYW5AYWR2YW5jZWRuYXZpZ2F0aW9uLmNvbSIsImdpdmVuX25hbWUiOiJMdWFuIiwiZmFtaWx5X25hbWUiOiJUcmFuIiwiZW1haWwiOiJsdWFuLnRyYW5AYWR2YW5jZWRuYXZpZ2F0aW9uLmNvbSJ9.AaUze89svODOJjMgrb9I5V_be00NfRMK_PKUz6YpJzAIubmyg26DJhnGQdO4bVcRYuU8W_IhQxmvop9MUghLqy0LAJ6htgy0c_t0VV9LWQcuYlRYZ-pfFsm1OOggqzyOO6W_IWsvX3dnZnU58I553EcVv7EfJRp-iBcWBFX6q_2-h4Kp';
         const headers = {
             Authorization: jwtToken,
             contentType: "application/octet-stream"
         };
 
-        var socket = new WebSocket('ws://127.0.0.1:9090/ws-manualcontrol');
+        var socket = new WebSocket('ws://127.0.0.1:9090/ws-vehicles');
         this.stompClient = Stomp.over(socket);
         this.stompClient.connect({
             Authorization: jwtToken,
@@ -112,7 +112,7 @@ class Gamepad extends Component<{ disabled: boolean }, { x: number, y: number, z
         console.log(decoded);
 
 
-        this.stompClient.send("/app/ws-manualcontrol", {
+        this.stompClient.send("/app/manual-control", {
             "content-type": "application/octet-stream",
             "vehicleId": "luant-drone"
         }, encode);//application/octet-stream
