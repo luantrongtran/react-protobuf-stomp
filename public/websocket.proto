@@ -21,3 +21,48 @@ message ManualControl {
 
   optional CommandType commandType = 5;
 }
+
+message Notification {
+  enum Priority {
+    LOW = 0;
+    MED = 1;
+    HIGH = 2;
+  }
+
+  enum NotificationType {
+    STATUS_UPDATE = 0;
+  }
+
+  message RelevantUsers {
+    repeated string vehicleIds = 1;
+    repeated string userRoles = 2;
+  }
+
+  message Recipients {
+    repeated string emails = 1;
+    repeated string mobileNumbers = 2;
+    repeated string userIds = 3;
+
+    optional RelevantUsers relevantUsers = 4;
+  }
+
+  message SendVia {
+    optional bool email = 1;
+    optional bool inApp = 2;
+    optional bool sms = 3;
+  }
+
+  message NotificationParameters {
+    required Recipients recipients = 1;
+    optional SendVia sendVia = 2;
+  }
+
+  optional string notificationId = 1;
+  required string title = 2;
+  required string content = 3;
+
+  required NotificationType type = 4;
+  required NotificationParameters parameters = 5;
+  required Priority priority = 6;
+  required string senderId = 7;
+}

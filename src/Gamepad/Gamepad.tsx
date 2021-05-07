@@ -5,7 +5,7 @@ import {Joystick} from "react-joystick-component";
 import {IJoystickUpdateEvent} from "react-joystick-component/build/lib/Joystick";
 import {load, Root} from "protobufjs";
 
-const Stomp = require('stompjs');
+import { Client } from '@stomp/stompjs';
 
 enum CommandType {
     NAVIGATION,
@@ -42,7 +42,7 @@ class Gamepad extends Component<{ disabled: boolean }, { x: number, y: number, z
         this.joystickSize = 100;
 
         load('/websocket.proto', (err: (Error | null), root?: Root) => {
-            console.log('Loading proto file');
+            console.log('Loading proto file 1');
             if (err || root === undefined) {
                 console.error('failed to load proto file');
                 throw err;
@@ -64,62 +64,84 @@ class Gamepad extends Component<{ disabled: boolean }, { x: number, y: number, z
     }
 
     connect = () => {
-        if (this.state.isWebSocketConnected == true) {
-            // if already connected
-            return;
-        }
-        console.log("Connecting to websocket");
-        console.log(this.manualControlProtobuf);
-        const jwtToken = 'eyJhbGciOiJFUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICItZTQ2Tm5iTXNRbG03ZjdUc0U2Rl9uSUkzakFOQ0NvN0ttNDJPMGFXdUxFIn0.eyJleHAiOjE2MDc0Mzc4OTUsImlhdCI6MTYwNzQwMTg5OCwiYXV0aF90aW1lIjoxNjA3NDAxODk1LCJqdGkiOiJmNzU5OWRmMC1hMWVhLTQ0Y2MtOTRmNy1iOTIwODgzZGFhMzIiLCJpc3MiOiJodHRwczovL2FwYWMuY2xvdWRncm91bmRjb250cm9sLmNvbS9hdXRoL3JlYWxtcy9jZ2NzLWRldiIsImF1ZCI6WyJicm9rZXIiLCJjbG91ZGdyb3VuZGNvbnRyb2wtZGV2Il0sInN1YiI6ImRjZmNjYjlhLTk3NTktNGVjYy1hZWQ5LTA5ZGI2YmI0NTk3MyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImNsb3VkZ3JvdW5kY29udHJvbC1zdGciLCJzZXNzaW9uX3N0YXRlIjoiNjE0ODM2NjgtZDE2Yi00NDgyLTljNzEtZWFmNDIwMzVjMzhkIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlc291cmNlX2FjY2VzcyI6eyJicm9rZXIiOnsicm9sZXMiOlsicmVhZC10b2tlbiJdfSwiY2xvdWRncm91bmRjb250cm9sLWRldiI6eyJyb2xlcyI6WyJVc2VyIEFkbWluaXN0cmF0aW9uIl19LCJjbG91ZGdyb3VuZGNvbnRyb2wtc3RnIjp7InJvbGVzIjpbIlVzZXIgQWRtaW5pc3RyYXRpb24iXX19LCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIGVtYWlsIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJMdWFuIFRyYW4iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJsdWFuLnRyYW5AYWR2YW5jZWRuYXZpZ2F0aW9uLmNvbSIsImdpdmVuX25hbWUiOiJMdWFuIiwiZmFtaWx5X25hbWUiOiJUcmFuIiwiZW1haWwiOiJsdWFuLnRyYW5AYWR2YW5jZWRuYXZpZ2F0aW9uLmNvbSJ9.AaUze89svODOJjMgrb9I5V_be00NfRMK_PKUz6YpJzAIubmyg26DJhnGQdO4bVcRYuU8W_IhQxmvop9MUghLqy0LAJ6htgy0c_t0VV9LWQcuYlRYZ-pfFsm1OOggqzyOO6W_IWsvX3dnZnU58I553EcVv7EfJRp-iBcWBFX6q_2-h4Kp';
-        const headers = {
-            Authorization: jwtToken,
-            contentType: "application/octet-stream"
+        const jwtToken = 'eyJhbGciOiJFUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICItZTQ2Tm5iTXNRbG03ZjdUc0U2Rl9uSUkzakFOQ0NvN0ttNDJPMGFXdUxFIn0.eyJleHAiOjE2MTE3MzE4NTAsImlhdCI6MTYxMTcwMzA1MCwiYXV0aF90aW1lIjoxNjExNzAzMDQ5LCJqdGkiOiJmZDAyNGJhZS1hYjE1LTRhOTQtOGNjNC1lMTY3MjZkN2ZhZDgiLCJpc3MiOiJodHRwczovL2FwYWMuY2xvdWRncm91bmRjb250cm9sLmNvbS9hdXRoL3JlYWxtcy9jZ2NzLWRldiIsImF1ZCI6WyJicm9rZXIiLCJjbG91ZGdyb3VuZGNvbnRyb2wtZGV2Il0sInN1YiI6ImRjZmNjYjlhLTk3NTktNGVjYy1hZWQ5LTA5ZGI2YmI0NTk3MyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImNsb3VkZ3JvdW5kY29udHJvbC1zdGciLCJzZXNzaW9uX3N0YXRlIjoiYzQ3MzdiM2EtOTM2YS00MGRjLWFmZmItOTFhMTkzNGFkYTAzIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlc291cmNlX2FjY2VzcyI6eyJicm9rZXIiOnsicm9sZXMiOlsicmVhZC10b2tlbiJdfSwiY2xvdWRncm91bmRjb250cm9sLWRldiI6eyJyb2xlcyI6WyJVc2VyIEFkbWluaXN0cmF0aW9uIl19LCJjbG91ZGdyb3VuZGNvbnRyb2wtc3RnIjp7InJvbGVzIjpbIlVzZXIgQWRtaW5pc3RyYXRpb24iXX19LCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIGVtYWlsIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJMdWFuIFRyYW4iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJsdWFuLnRyYW5AYWR2YW5jZWRuYXZpZ2F0aW9uLmNvbSIsImdpdmVuX25hbWUiOiJMdWFuIiwiZmFtaWx5X25hbWUiOiJUcmFuIiwiZW1haWwiOiJsdWFuLnRyYW5AYWR2YW5jZWRuYXZpZ2F0aW9uLmNvbSJ9.AQAlKDiZlwI74QU4O-khoFBclHYuX6jWUQ0vyVVudCp0OXib4Ner53Xwx7PNSSF2VNmPRpXl_FZNNCajy38lpJ_MASI4FcfY_CFPvnm5nW3bCHda0ydVx3jNR2q4iIleRaiMvX1jYHlsYv2R9VZOKwRU8YlRcwl5IB84DWJzKZbYbjNJ';
+
+        // const wssUrl = "wss://apac.cloudgroundcontrol.com/api/ws-vehicles";
+        const wssUrl = "ws://localhost:9090/ws-vehicles";
+        this.stompClient = new Client({
+            brokerURL: wssUrl,
+            debug: function (str: string) {
+                // console.log('WS debug: ', str);
+            },
+            reconnectDelay: 5000,
+            heartbeatIncoming: 4000,
+            heartbeatOutgoing: 4000,
+            webSocketFactory: function () {
+                return new WebSocket(wssUrl, []);
+            },
+            connectHeaders: { Authorization: jwtToken },
+        });
+
+        this.stompClient.onConnect = () => {
+            console.log("WS connected");
+            this.setState({isWebSocketConnected: true});
+        };
+        this.stompClient.onDisconnect = () => {
+            console.log("WS disconnected");
+        };
+        this.stompClient.onStompError = (err: any) => {
+            console.log("WS error" + err);
         };
 
-        var socket = new WebSocket('ws://127.0.0.1:9090/ws-vehicles');
-        this.stompClient = Stomp.over(socket);
-        this.stompClient.connect({
-            Authorization: jwtToken,
-            "content-type": "application/octet-stream"
-        }, (frame: any) => {
-            this.setConnected(true);
-            console.log('Connected: ' + frame);
-        });
+        this.stompClient.connectHeaders = {Authorization: jwtToken};
+        this.stompClient.activate();
+
+        this.subscribe();
+    }
+
+    subscribe = () => {
+        // const destination = "/users/queue/operation/luant-drone";
+        const destination = "/users/queue/operation/329bc8a162ae7208ae18976a9c4f95e9344b9ede18ec4126224b199e39dc1156";
+        console.log("subscribing to operation");
+
+        this.stompClient.subscribe(destination, (res:any) => {
+            try {
+                console.log(res);
+            } catch (err) {
+                console.error(err);
+            }
+        }, {});
     }
 
     disconnect = () => {
         if (this.stompClient !== null) {
-            this.stompClient.disconnect();
+            this.stompClient.deactivate();
         }
+
         this.setConnected(false);
         console.log("Disconnected");
     }
 
-    sendManualControl = (manualControl: any) => {
-        if (this.state.isWebSocketConnected === false) {
-            console.log("Cannot manual control - connection closed");
-        }
+    sendManualControl = (manualConrtol: any) => {
         console.log("Sending manual control");
         // const manualControl = {
         //     xAxis: 0.6,
         //     yAxis: 0.5,
         //     zAxis: 0.3,
         //     rAxis: 0.8,
+        //     commandType: CommandType.ARM
         // };
-        let encode = this.manualControlProtobuf.encode(manualControl).finish();
-        console.log(encode);
-        const decoded = this.manualControlProtobuf.decode(encode);
-        console.log(decoded);
+        // console.log(manualControl);
+        let encode = this.manualControlProtobuf.encode(manualConrtol).finish();
+        // console.log(encode);
+        // const decoded = this.manualControlProtobuf.decode(encode);
+        // console.log(decoded);
 
-
-        this.stompClient.send("/app/manual-control", {
-            "content-type": "application/octet-stream",
-            "vehicleId": "luant-drone"
-        }, encode);//application/octet-stream
+        this.stompClient.publish({ destination:'/app/manual-control', binaryBody: encode, headers:  {"content-type": "application/octet-stream", "vehicleId": "luant-drone"} });
     }
 
     componentDidMount() {
-        this.intervalHandler = setInterval(this.sendRequest, 300)
+        this.intervalHandler = setInterval(this.sendRequest, 300);
     }
 
     componentWillUnmount() {
@@ -185,22 +207,6 @@ class Gamepad extends Component<{ disabled: boolean }, { x: number, y: number, z
                 };
 
             this.sendManualControl(data);
-            //     const url = this.manualControlUrl;
-            //
-            //     fetch(url, {
-            //         method: "POST",
-            //         headers: {
-            //             "Content-Type": "application/vnd.api+json",
-            //             "Access-Control-Allow-Origin": "*",
-            //             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
-            //             , 'Accept': 'application/vnd.api+json'
-            //         }
-            //         , body: JSON.stringify(jBody)
-            //     }).then(res => {
-            //         // console.log("Request complete! response:", res);
-            //     }).catch(err => {
-            //
-            //     });
         }
     }
 
