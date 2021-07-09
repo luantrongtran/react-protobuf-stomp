@@ -9,17 +9,19 @@ message VehiclePosition {
 }
 
 message ManualControl {
-  enum CommandType {
-    NAVIGATION = 0;
-    ARM = 1;
-  }
-
   optional float xAxis = 1;
   optional float yAxis = 2;
   optional float zAxis = 3;
   optional float rAxis = 4;
-
-  optional CommandType commandType = 5;
+  enum CommandType {
+    NAVIGATION = 0;
+    ARM = 1;
+    GIMBAL_CONTROL = 2;
+  }
+  required CommandType commandType = 5;
+  optional float cameraGimbalYaw = 6;
+  optional float cameraGimbalPitch = 7;
+  optional float cameraGimbalRoll = 8;
 }
 
 message Notification {
@@ -65,4 +67,74 @@ message Notification {
   required NotificationParameters parameters = 5;
   required Priority priority = 6;
   required string senderId = 7;
+}
+
+message Operation {
+    required string operationId = 1;
+
+    enum OperationState {
+        PENDING = 0;
+        STARTED = 1;
+        CANCELLED = 2;
+        COMPLETED = 3;
+    }
+    required OperationState state = 2;
+
+    message Waypoint {
+        required string id = 1;
+
+        enum WaypointStatus {
+            PENDING = 1;
+            STARTED = 2;
+            COMPLETED = 3;
+        }
+        required WaypointStatus status = 2;
+    }
+    repeated Waypoint waypoints = 3;
+
+    enum OperationType {
+        WAYPOINT = 1;
+        SURVEY_AREA = 2;
+    }
+    optional OperationType operationType = 4;
+}
+
+message Operation123 {
+    required string operationId = 1;
+
+    enum OperationState {
+        PENDING = 0;
+        UPLOADING = 1;
+        UPLOADED = 2;
+        STARTING = 3;
+        STARTED = 4;
+        CANCELLING = 5;
+        CANCELLED = 6;
+        COMPLETED = 7;
+        UPLOAD_FAILED = 8;
+        START_FAILED = 9;
+        UPLOAD_TIMEOUT = 10;
+        START_TIMEOUT = 11;
+        CANCEL_FAILED = 12;
+        CANCEL_TIMEOUT = 13;
+    }
+    required OperationState state = 2;
+
+    message Waypoint {
+        required string id = 1;
+
+        enum WaypointStatus {
+            PENDING = 1;
+            STARTED = 2;
+            COMPLETED = 3;
+        }
+        required WaypointStatus status = 2;
+    }
+    repeated Waypoint waypoints = 3;
+
+    enum OperationType {
+        WAYPOINT = 1;
+        SURVEY_AREA = 2;
+    }
+    optional OperationType operationType = 4;
 }
